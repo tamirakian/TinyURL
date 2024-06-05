@@ -1,34 +1,50 @@
-﻿using Microsoft.Extensions.Options;
-using MongoDB.Driver;
-using TinyURLApp.Models;
+﻿using TinyURLApp.Data.Repositories;
 
 namespace TinyURLApp.Services;
 
-public class UrlShorteningService
+public class UrlShorteningService : IUrlShorteningService
 {
-    private readonly IMongoCollection<ShortenedUrlMetadata> _shortenedUrlsMetadataCollection;
+    private readonly ITinyUrlDatabaseRepository _repository;
+    private readonly Random _random;
+    private const string BaseUrl = "https://tinyurl.com";
+    private const int ShortUrlPathLength = 8;
+    private static readonly char[] ShortUrlChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".ToCharArray();
+    private static readonly int ShortUrlCharsLength = ShortUrlChars.Length;
 
-    public UrlShorteningService(IOptions<TinyUrlDatabaseSettings> tinyUrlDatabaseSettings)
+
+    public UrlShorteningService(ITinyUrlDatabaseRepository tinyUrlDatabaseRepository)
     {
-        var mongoClient = new MongoClient(tinyUrlDatabaseSettings.Value.ConnectionString);
-        var mongoDatabase = mongoClient.GetDatabase(tinyUrlDatabaseSettings.Value.DatabaseName);
-        _shortenedUrlsMetadataCollection = mongoDatabase.GetCollection<ShortenedUrlMetadata>(
-            tinyUrlDatabaseSettings.Value.ShortenedUrlsMetadataCollectionName);
+        _repository = tinyUrlDatabaseRepository;
+        _random = new Random();
     }
 
-    // The "_ => true" is a lambda expression used as a filter, selecting all documents in the collection.
-    public async Task<List<ShortenedUrlMetadata>> GetAsync() =>
-        await _shortenedUrlsMetadataCollection.Find(_ => true).ToListAsync();
+    public async Task<string> GenerateAsync(string originalUrl)
+    {
+        var shortUrlMetadata = await _repository.GetShortUrlMetadataAsync(originalUrl);
+        if (shortUrlMetadata != null)
+        {
+            return $"{BaseUrl}/{shortUrlMetadata.ShortUrl}";
+        }
 
-    public async Task<ShortenedUrlMetadata?> GetAsync(string id) =>
-        await _shortenedUrlsMetadataCollection.Find(x => x.Id == id).FirstOrDefaultAsync();
+        var shortUrl = GenerateShortUrl();
+        await _repository.SaveAsync(originalUrl, shortUrl);
+        return $"{BaseUrl}/{shortUrl}"; ;
+    }
 
-    public async Task CreateAsync(ShortenedUrlMetadata newShortenedUrlMetadata) =>
-        await _shortenedUrlsMetadataCollection.InsertOneAsync(newShortenedUrlMetadata);
+    public async Task<string> GetOriginalAsync(string shortUrl)
+    {
+        var shortUrlPath = shortUrl.Replace(BaseUrl, "");
+        var originalUrlMetadata = await _repository.GetOriginalUrlMetadataAsync(shortUrlPath);
+        return originalUrlMetadata != null ? originalUrlMetadata.OriginalUrl : "";
+    }
 
-    public async Task UpdateAsync(string id, ShortenedUrlMetadata updatedShortenedUrlMetadata) =>
-        await _shortenedUrlsMetadataCollection.ReplaceOneAsync(x => x.Id == id, updatedShortenedUrlMetadata);
-
-    public async Task RemoveAsync(string id) =>
-        await _shortenedUrlsMetadataCollection.DeleteOneAsync(x => x.Id == id);
+    private string GenerateShortUrl()
+    {
+        var shortUrlPath = new char[ShortUrlPathLength];
+        for (int i = 0; i < ShortUrlPathLength; i++)
+        {
+            shortUrlPath[i] = ShortUrlChars[_random.Next(ShortUrlCharsLength)];
+        }
+        return new string(shortUrlPath);
+    }
 }
