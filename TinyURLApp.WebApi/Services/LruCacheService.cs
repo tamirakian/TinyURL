@@ -57,13 +57,4 @@ public class LruCacheService<TKey, TValue> : ICacheService<TKey, TValue> where T
             _cacheItemsOrder.AddFirst(newNode);
         }
     }
-
-    public void Clear()
-    {
-        lock (_lock)
-        {
-            _cache.Clear();
-            _cacheItemsOrder.Clear();
-        }
-    }
 }
