@@ -24,6 +24,7 @@ builder.Services.Configure<TinyUrlDatabaseSettings>(
 // This single instance will be reused every time the service is requested.
 builder.Services.AddSingleton<ITinyUrlDatabaseRepository, TinyUrlDatabaseRepository>();
 builder.Services.AddSingleton<IUrlShorteningService, UrlShorteningService>();
+builder.Services.AddSingleton<ICacheService<string, string>>(new LruCacheService<string, string>(2));
 
 // "AddJsonOptions" 
 // property names in the web API's serialized JSON response match their corresponding property names in the CLR object type.

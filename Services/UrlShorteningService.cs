@@ -5,17 +5,18 @@ namespace TinyURLApp.Services;
 public class UrlShorteningService : IUrlShorteningService
 {
     private readonly ITinyUrlDatabaseRepository _repository;
+    private readonly ICacheService<string, string> _cacheService;
     private readonly Random _random;
-    private const string BaseUrl = "https://tinyurl.com";
     private const int ShortUrlPathLength = 8;
     private static readonly char[] ShortUrlChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".ToCharArray();
     private static readonly int ShortUrlCharsLength = ShortUrlChars.Length;
 
 
-    public UrlShorteningService(ITinyUrlDatabaseRepository tinyUrlDatabaseRepository)
+    public UrlShorteningService(ITinyUrlDatabaseRepository tinyUrlDatabaseRepository, ICacheService<string, string> cacheService)
     {
         _repository = tinyUrlDatabaseRepository;
         _random = new Random();
+        _cacheService = cacheService;
     }
 
     public async Task<string> GenerateAsync(string originalUrl)
@@ -23,19 +24,30 @@ public class UrlShorteningService : IUrlShorteningService
         var shortUrlMetadata = await _repository.GetShortUrlMetadataAsync(originalUrl);
         if (shortUrlMetadata != null)
         {
-            return $"{BaseUrl}/{shortUrlMetadata.ShortUrl}";
+            return shortUrlMetadata.ShortUrl;
         }
 
         var shortUrl = GenerateShortUrl();
         await _repository.SaveAsync(originalUrl, shortUrl);
-        return $"{BaseUrl}/{shortUrl}"; ;
+        _cacheService.Add(shortUrl, originalUrl);
+        return shortUrl;
     }
 
-    public async Task<string> GetOriginalAsync(string shortUrl)
+    public async Task<string?> GetOriginalAsync(string shortUrl)
     {
-        var shortUrlPath = shortUrl.Replace(BaseUrl, "");
-        var originalUrlMetadata = await _repository.GetOriginalUrlMetadataAsync(shortUrlPath);
-        return originalUrlMetadata != null ? originalUrlMetadata.OriginalUrl : "";
+        var originalUrl = _cacheService.Get(shortUrl);
+        if (originalUrl != null)
+        {
+            return originalUrl;
+        }
+
+        var originalUrlMetadata = await _repository.GetOriginalUrlMetadataAsync(shortUrl);
+        if (originalUrlMetadata != null)
+        {
+            originalUrl = originalUrlMetadata.OriginalUrl;
+            _cacheService.Add(shortUrl, originalUrl);
+        }
+        return originalUrl;
     }
 
     private string GenerateShortUrl()
