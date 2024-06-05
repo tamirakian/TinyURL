@@ -1,5 +1,3 @@
-using TinyURLApp.Services;
-
 namespace TinyURLApp.Test;
 
 public class LruCacheServiceTest
