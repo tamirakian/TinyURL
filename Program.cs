@@ -23,7 +23,11 @@ builder.Services.Configure<TinyUrlDatabaseSettings>(
 // This single instance will be reused every time the service is requested.
 builder.Services.AddSingleton<UrlShorteningService>();
 
-builder.Services.AddControllers();
+// "AddJsonOptions" 
+// property names in the web API's serialized JSON response match their corresponding property names in the CLR object type.
+// For example, the "ShortenedUrlMetadata" class's "OriginalUrl" property serializes as "OriginalUrl" instead of "originalUrl".
+builder.Services.AddControllers()
+    .AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = null);
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

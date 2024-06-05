@@ -1,5 +1,6 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+using System.Text.Json.Serialization;
 
 namespace TinyURLApp.Models;
 
@@ -11,15 +12,12 @@ public class ShortenedUrlMetadata
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     public string? Id { get; set; }
-
     // Annotated with [BsonElement] to represents the property name "Original" in the MongoDB collection
     [BsonElement("Original")]
+    // Annotated with [JsonPropertyName] to represents the property name in the web API's serialized JSON response.
+    [JsonPropertyName("Original")]
     public string OriginalUrl { get; set; }
-
     [BsonElement("Shortened")]
+    [JsonPropertyName("Shortened")]
     public string ShortenedUrl { get; set; }
-
-    public DateTime _created { get; set; }
-
-    public DateTime _updated { get; set; }
 }
