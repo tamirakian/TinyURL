@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using TinyURLApp.Models;
 using TinyURLApp.Services;
 
 namespace TinyURLApp.Controllers;
@@ -15,9 +14,9 @@ namespace TinyURLApp.Controllers;
 // It provides common functionality such as action methods, request context, and access to services through dependency injection.
 public class UrlShorteningController : ControllerBase
 {
-    private readonly UrlShorteningService _urlShorteningService;
+    private readonly IUrlShorteningService _urlShorteningService;
 
-    public UrlShorteningController(UrlShorteningService urlShorteningService) =>
+    public UrlShorteningController(IUrlShorteningService urlShorteningService) =>
         _urlShorteningService = urlShorteningService;
 
     [HttpPost]
@@ -27,10 +26,8 @@ public class UrlShorteningController : ControllerBase
         return Ok(shortenedUrl);
     }
 
-    [HttpGet]
-    // The "ShortenedUrlMetadata" object wrapped in an ActionResult.
-    // This allows for various HTTP responses (e.g., 200 OK, 404 Not Found).
-    public async Task<IActionResult> RedirectShort(string shortUrl)
+    [HttpGet("{shortUrl}")]
+    public async Task<IActionResult> RedirectToOriginal([FromRoute] string shortUrl)
     {
         var originalUrl = await _urlShorteningService.GetOriginalAsync(shortUrl);
         if (originalUrl is null) 

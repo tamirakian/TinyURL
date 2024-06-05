@@ -6,5 +6,5 @@ public class TinyUrlDatabaseSettings
 {
     public string ConnectionString { get; set; }
     public string DatabaseName { get; set; }
-    public string ShortenedUrlsMetadataCollectionName { get; set; }
+    public string UrlsMetadataCollectionName { get; set; }
 }

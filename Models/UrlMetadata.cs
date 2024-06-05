@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace TinyURLApp.Models;
 
-public class ShortenedUrlMetadata
+public class UrlMetadata
 {
     // Annotated with [BsonId] to make this property the document's primary key.
     // Annotated with [BsonRepresentation(BsonType.ObjectId)] to allow passing the parameter as type
@@ -17,7 +17,7 @@ public class ShortenedUrlMetadata
     // Annotated with [JsonPropertyName] to represents the property name in the web API's serialized JSON response.
     [JsonPropertyName("Original")]
     public string OriginalUrl { get; set; }
-    [BsonElement("Shortened")]
-    [JsonPropertyName("Shortened")]
-    public string ShortenedUrl { get; set; }
+    [BsonElement("Short")]
+    [JsonPropertyName("Short")]
+    public string ShortUrl { get; set; }
 }

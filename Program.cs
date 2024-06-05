@@ -1,3 +1,4 @@
+using TinyURLApp.Data.Repositories;
 using TinyURLApp.Models;
 using TinyURLApp.Services;
 
@@ -21,7 +22,8 @@ builder.Services.Configure<TinyUrlDatabaseSettings>(
 // The singleton service lifetime is most appropriate because UrlShorteningService takes a direct dependency on MongoClient.
 // A singleton service means that the DI container will create only one instance of the service throughout the application's lifetime.
 // This single instance will be reused every time the service is requested.
-builder.Services.AddSingleton<UrlShorteningService>();
+builder.Services.AddSingleton<ITinyUrlDatabaseRepository, TinyUrlDatabaseRepository>();
+builder.Services.AddSingleton<IUrlShorteningService, UrlShorteningService>();
 
 // "AddJsonOptions" 
 // property names in the web API's serialized JSON response match their corresponding property names in the CLR object type.
