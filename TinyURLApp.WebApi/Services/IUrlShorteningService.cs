@@ -2,6 +2,6 @@
 
 public interface IUrlShorteningService
 {
-    Task<string> GenerateAsync(string originalUrl);
+    Task<string?> GenerateAsync(string originalUrl);
     Task<string?> GetOriginalAsync(string shortUrl);
 }

@@ -22,8 +22,10 @@ public class LruCacheService<TKey, TValue> : ICacheService<TKey, TValue> where T
     {
         if (_cache.TryGetValue(key, out var node))
         {
+            // Lock the cache to ensure thread safety while modifying the linked list.
             lock (_lock)
             {
+                // Move the accessed node to the front of the linked list to mark it as recently used.
                 _cacheItemsOrder.Remove(node);
                 _cacheItemsOrder.AddFirst(node);
             }
@@ -39,10 +41,12 @@ public class LruCacheService<TKey, TValue> : ICacheService<TKey, TValue> where T
         {
             if (_cache.TryGetValue(key, out var node))
             {
+                // If the key exists, remove the existing node from the linked list to update it later.
                 _cacheItemsOrder.Remove(node);
             }
             else if (_cache.Count >= _capacity)
             {
+                // If the cache has reached its capacity, remove the least recently used item.
                 var lastNode = _cacheItemsOrder.Last;
                 if (lastNode != null)
                 {
@@ -51,19 +55,11 @@ public class LruCacheService<TKey, TValue> : ICacheService<TKey, TValue> where T
                 }
             }
 
+            // Add a new node to the front of the linked list to mark it as most recently used.
             var cacheItem = new CacheItem<TKey, TValue>(key, value);
             var newNode = new LinkedListNode<CacheItem<TKey, TValue>>(cacheItem);
             _cache[key] = newNode;
             _cacheItemsOrder.AddFirst(newNode);
-        }
-    }
-
-    public void Clear()
-    {
-        lock (_lock)
-        {
-            _cache.Clear();
-            _cacheItemsOrder.Clear();
         }
     }
 }
